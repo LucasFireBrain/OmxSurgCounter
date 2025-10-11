@@ -27,7 +27,7 @@ th { background: #eee; }
 td.editable { cursor: pointer; background:#fdfdfd; }
 button.small-btn { padding: 4px 8px; font-size: 12px; }
 
-#editPopup {
+.popup {
   display:none; position: fixed; top: 20%; left: 50%;
   transform: translateX(-50%);
   background: #fff; border: 1px solid #999;
@@ -35,6 +35,9 @@ button.small-btn { padding: 4px 8px; font-size: 12px; }
   padding: 15px; z-index: 20;
   width: 90%; max-width: 400px;
 }
+.popup input { width: 100%; padding: 6px; margin-bottom: 6px; }
+.popup button { width: 100%; margin-top: 6px; }
+
 #editResults div { padding: 6px; cursor: pointer; }
 #editResults div:hover { background: #dbeeff; }
 
@@ -42,6 +45,13 @@ button.small-btn { padding: 4px 8px; font-size: 12px; }
   margin-top: 15px;
   display: flex; flex-direction: column; align-items: center;
 }
+.action-btn {
+  width: 100%; margin-top: 8px; padding: 10px;
+  font-size: 16px; border:none; border-radius:4px;
+}
+.copy-btn { background:#4CAF50; color:white; }
+.download-btn { background:#2196F3; color:white; }
+.reset-btn { background:#f44336; color:white; }
 </style>
 </head>
 <body>
@@ -53,9 +63,6 @@ button.small-btn { padding: 4px 8px; font-size: 12px; }
   <option value="">Seleccione una cirugía...</option>
 </select>
 
-<label for="priceList">Lista de precios</label>
-<input id="priceList" readonly>
-
 <label for="search">Buscar producto</label>
 <div style="position:relative">
   <input id="search" type="text" placeholder="Buscar por código o descripción..." disabled>
@@ -63,7 +70,7 @@ button.small-btn { padding: 4px 8px; font-size: 12px; }
 </div>
 
 <label for="qty">Cantidad</label>
-<input id="qty" type="number" min="1" value="1" disabled>
+<input id="qty" type="number" min="1" value="1" disabled inputmode="numeric">
 <button id="addBtn" onclick="addItem()" disabled>Agregar producto</button>
 
 <table id="itemTable">
@@ -71,16 +78,24 @@ button.small-btn { padding: 4px 8px; font-size: 12px; }
   <tbody></tbody>
 </table>
 
-<div id="editPopup">
+<div id="editPopup" class="popup">
   <h3>Reemplazar producto</h3>
   <input id="editSearch" type="text" placeholder="Buscar producto...">
   <div id="editResults"></div>
   <button onclick="closeEdit()">Cerrar</button>
 </div>
 
+<div id="qtyPopup" class="popup">
+  <h3>Editar cantidad</h3>
+  <input id="qtyInputPopup" type="number" inputmode="numeric" min="1">
+  <button onclick="saveQty()">Guardar</button>
+  <button onclick="closeQty()">Cancelar</button>
+</div>
+
 <div id="exportBox">
-  <button onclick="exportJSON()">📤 Exportar JSON</button>
-  <textarea id="jsonOutput" rows="6" style="width:100%; margin-top:8px;" readonly></textarea>
+  <button class="action-btn copy-btn" onclick="copyJSON()">📋 Copiar JSON</button>
+  <button class="action-btn download-btn" onclick="downloadJSON()">💾 Descargar JSON</button>
+  <button class="action-btn reset-btn" onclick="resetForm()">🔁 Nueva cirugía</button>
 </div>
 
 <script>
@@ -117,7 +132,6 @@ const products = [
 ];
 
 const surgerySelect = document.getElementById('surgerySelect');
-const priceListInput = document.getElementById('priceList');
 const search = document.getElementById('search');
 const qtyInput = document.getElementById('qty');
 const addBtn = document.getElementById('addBtn');
@@ -135,6 +149,7 @@ let currentList = null;
 let currentSurgery = null;
 const items = [];
 let editIndex = null;
+let editQtyIndex = null;
 
 // surgery selection
 surgerySelect.addEventListener('change', () => {
@@ -143,17 +158,10 @@ surgerySelect.addEventListener('change', () => {
   if (found) {
     currentList = found.list;
     currentSurgery = found.id;
-    priceListInput.value = "Lista " + found.list;
     search.disabled = false;
     qtyInput.disabled = false;
     addBtn.disabled = false;
-  } else {
-    currentList = null;
-    priceListInput.value = '';
-    search.disabled = true;
-    qtyInput.disabled = true;
-    addBtn.disabled = true;
-  }
+  } else resetForm();
 });
 
 // === Search logic ===
@@ -204,14 +212,14 @@ function refreshTable() {
     row.innerHTML = `
       <td class="editable" onclick="openEdit(${i})">${it.code}</td>
       <td class="editable" onclick="openEdit(${i})">${it.name}</td>
-      <td class="editable" onclick="editQty(${i})">${it.qty}</td>
+      <td class="editable" onclick="openQty(${i})">${it.qty}</td>
       <td><button class="small-btn" onclick="removeItem(${i})">❌</button></td>`;
     tbody.appendChild(row);
   });
 }
 function removeItem(i) { items.splice(i,1); refreshTable(); }
 
-// === Edit popup ===
+// === Edit product popup ===
 const popup = document.getElementById('editPopup');
 const editSearch = document.getElementById('editSearch');
 const editResults = document.getElementById('editResults');
@@ -246,26 +254,63 @@ function replaceProduct(p) {
   refreshTable();
   closeEdit();
 }
-function editQty(i) {
-  const newVal = prompt('Nueva cantidad:', items[i].qty);
-  if (newVal !== null && !isNaN(newVal) && newVal > 0) {
-    items[i].qty = parseInt(newVal);
-    refreshTable();
-  }
-}
 function closeEdit() { popup.style.display = 'none'; }
 
-// === Export ===
-function exportJSON() {
-  if (!currentSurgery) return alert('Seleccione una cirugía primero');
-  const data = {
+// === Quantity popup ===
+const qtyPopup = document.getElementById('qtyPopup');
+const qtyInputPopup = document.getElementById('qtyInputPopup');
+function openQty(i) {
+  editQtyIndex = i;
+  qtyInputPopup.value = items[i].qty;
+  qtyPopup.style.display = 'block';
+  qtyInputPopup.focus();
+}
+function saveQty() {
+  const val = parseInt(qtyInputPopup.value);
+  if (val > 0 && editQtyIndex !== null) {
+    items[editQtyIndex].qty = val;
+    refreshTable();
+  }
+  closeQty();
+}
+function closeQty() { qtyPopup.style.display = 'none'; }
+
+// === Export JSON ===
+function getJSONData() {
+  return JSON.stringify({
     surgeryID: currentSurgery,
     priceList: currentList,
     items: items
-  };
-  const json = JSON.stringify(data, null, 2);
-  document.getElementById('jsonOutput').value = json;
-  navigator.clipboard.writeText(json).catch(()=>{});
+  }, null, 2);
+}
+function copyJSON() {
+  if (!currentSurgery) return alert('Seleccione una cirugía primero');
+  navigator.clipboard.writeText(getJSONData())
+    .then(() => alert('✅ Copiado al portapapeles'))
+    .catch(() => alert('Error al copiar'));
+}
+function downloadJSON() {
+  if (!currentSurgery) return alert('Seleccione una cirugía primero');
+  const blob = new Blob([getJSONData()], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${currentSurgery}_finalcount.json`;
+  a.click();
+}
+
+// === Reset form ===
+function resetForm() {
+  if (items.length && !confirm("¿Borrar datos actuales?")) return;
+  surgerySelect.value = '';
+  search.value = '';
+  qtyInput.value = 1;
+  search.disabled = true;
+  qtyInput.disabled = true;
+  addBtn.disabled = true;
+  currentSurgery = null;
+  currentList = null;
+  items.length = 0;
+  refreshTable();
 }
 </script>
 
