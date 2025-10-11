@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuenta Final – Registro de Productos</title>
+<style>
+body { font-family: Arial, sans-serif; padding: 10px; background: #f7f7f7; }
+h2 { text-align: center; }
+label { display:block; margin-top:8px; font-weight:bold; }
+
+input, select, button {
+  font-size: 16px; padding: 6px; margin: 4px 0;
+  width: 100%; box-sizing: border-box;
+}
+#results {
+  border: 1px solid #ccc; background: white;
+  position: absolute; width: calc(100% - 12px);
+  max-height: 180px; overflow-y: auto; z-index: 10;
+}
+#results div { padding: 6px; cursor: pointer; }
+#results div:hover { background: #e0f0ff; }
+
+table { width: 100%; margin-top: 20px; border-collapse: collapse; background: white; }
+th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
+th { background: #eee; }
+td.editable { cursor: pointer; background:#fdfdfd; }
+button.small-btn { padding: 4px 8px; font-size: 12px; }
+
+#editPopup {
+  display:none; position: fixed; top: 20%; left: 50%;
+  transform: translateX(-50%);
+  background: #fff; border: 1px solid #999;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  padding: 15px; z-index: 20;
+  width: 90%; max-width: 400px;
+}
+#editResults div { padding: 6px; cursor: pointer; }
+#editResults div:hover { background: #dbeeff; }
+
+#exportBox {
+  margin-top: 15px;
+  display: flex; flex-direction: column; align-items: center;
+}
+</style>
+</head>
+<body>
+
+<h2>Registro de Productos - Cuenta Final</h2>
+
+<label for="surgerySelect">Código de cirugía</label>
+<select id="surgerySelect">
+  <option value="">Seleccione una cirugía...</option>
+</select>
+
+<label for="priceList">Lista de precios</label>
+<input id="priceList" readonly>
+
+<label for="search">Buscar producto</label>
+<div style="position:relative">
+  <input id="search" type="text" placeholder="Buscar por código o descripción..." disabled>
+  <div id="results"></div>
+</div>
+
+<label for="qty">Cantidad</label>
+<input id="qty" type="number" min="1" value="1" disabled>
+<button id="addBtn" onclick="addItem()" disabled>Agregar producto</button>
+
+<table id="itemTable">
+  <thead><tr><th>Código</th><th>Descripción</th><th>Cant.</th><th></th></tr></thead>
+  <tbody></tbody>
+</table>
+
+<div id="editPopup">
+  <h3>Reemplazar producto</h3>
+  <input id="editSearch" type="text" placeholder="Buscar producto...">
+  <div id="editResults"></div>
+  <button onclick="closeEdit()">Cerrar</button>
+</div>
+
+<div id="exportBox">
+  <button onclick="exportJSON()">📤 Exportar JSON</button>
+  <textarea id="jsonOutput" rows="6" style="width:100%; margin-top:8px;" readonly></textarea>
+</div>
+
+<script>
+// === Example surgery data ===
+const surgeries = [
+  { id:"P519-AFU7", list:"A" },
+  { id:"P516-RGU0", list:"B" },
+  { id:"P516-LAG5", list:"B" },
+  { id:"P514-RRE1", list:"B" },
+  { id:"P514-PSO8", list:"A" },
+  { id:"P512-SES9", list:"B" },
+  { id:"P512-RCA1", list:"A" },
+  { id:"P509-SES8", list:"B" },
+  { id:"P509-SES5", list:"A" },
+  { id:"P509-SES4", list:"A" }
+];
+
+// === Example product data ===
+const products = [
+  { global:"P001", A:"LA01", B:"LB01", name:"Aguja Para Microdisección" },
+  { global:"P002", A:"LA02", B:"LB02", name:"Alambre 0.40 GX" },
+  { global:"P003", A:"LA03", B:"LB03", name:"Broca Contraángulo" },
+  { global:"P004", A:"LA04", B:"LB04", name:"Broca Larga" },
+  { global:"P005", A:"LA05", B:"LB05", name:"Broca Mediana" },
+  { global:"P006", A:"LA06", B:"LB06", name:"Broca Pequeña 1.3 x 47 mm" },
+  { global:"P007", A:"LA07", B:"LB07", name:"Distractor Alveolar" },
+  { global:"P008", A:"LA08", B:"LB08", name:"Fabricacion PRF (Centrifuga)" },
+  { global:"P009", A:"LA09", B:"LB09", name:"Fresón Oval de Carburo" },
+  { global:"P010", A:"LA10", B:"LB10", name:"Fresón Oval de Carburo ST" },
+  { global:"P011", A:"LA11", B:"LB11", name:"Kit Frío Continuo" },
+  { global:"P012", A:"LA12", B:"LB12", name:"Large Tear Cross Cut Rasp" },
+  { global:"P013", A:"LA13", B:"LB13", name:"Prototipo Facial" },
+  { global:"P014", A:"LA14", B:"LB14", name:"Punta Cruz Contraángulo" }
+];
+
+const surgerySelect = document.getElementById('surgerySelect');
+const priceListInput = document.getElementById('priceList');
+const search = document.getElementById('search');
+const qtyInput = document.getElementById('qty');
+const addBtn = document.getElementById('addBtn');
+const results = document.getElementById('results');
+
+// populate surgeries dropdown
+surgeries.forEach(s => {
+  const opt = document.createElement('option');
+  opt.value = s.id;
+  opt.textContent = s.id;
+  surgerySelect.appendChild(opt);
+});
+
+let currentList = null;
+let currentSurgery = null;
+const items = [];
+let editIndex = null;
+
+// surgery selection
+surgerySelect.addEventListener('change', () => {
+  const val = surgerySelect.value;
+  const found = surgeries.find(s => s.id === val);
+  if (found) {
+    currentList = found.list;
+    currentSurgery = found.id;
+    priceListInput.value = "Lista " + found.list;
+    search.disabled = false;
+    qtyInput.disabled = false;
+    addBtn.disabled = false;
+  } else {
+    currentList = null;
+    priceListInput.value = '';
+    search.disabled = true;
+    qtyInput.disabled = true;
+    addBtn.disabled = true;
+  }
+});
+
+// === Search logic ===
+search.addEventListener('input', filterProducts);
+function filterProducts() {
+  const term = search.value.toLowerCase();
+  results.innerHTML = '';
+  if (!term || !currentList) return;
+  products
+    .filter(p => p.name.toLowerCase().includes(term)
+      || p.global.toLowerCase().includes(term)
+      || p[currentList].toLowerCase().includes(term))
+    .forEach(p => {
+      const div = document.createElement('div');
+      div.textContent = `${p[currentList]} — ${p.name}`;
+      div.onclick = () => selectProduct(p);
+      results.appendChild(div);
+    });
+}
+function selectProduct(p) {
+  search.value = `${p[currentList]} — ${p.name}`;
+  results.innerHTML = '';
+}
+
+function addItem() {
+  const val = search.value.trim();
+  const qty = parseInt(qtyInput.value);
+  if (!val || !qty) { alert('Seleccione producto y cantidad'); return; }
+  const [code] = val.split('—');
+  const p = products.find(x => x[currentList] === code.trim());
+  if (!p) { alert('Producto no encontrado'); return; }
+
+  const existing = items.find(it => it.code === p[currentList]);
+  if (existing) existing.qty += qty;
+  else items.push({ code: p[currentList], name: p.name, qty });
+
+  refreshTable();
+  search.value = '';
+  qtyInput.value = 1;
+}
+
+// === Table rendering ===
+function refreshTable() {
+  const tbody = document.querySelector('#itemTable tbody');
+  tbody.innerHTML = '';
+  items.forEach((it, i) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td class="editable" onclick="openEdit(${i})">${it.code}</td>
+      <td class="editable" onclick="openEdit(${i})">${it.name}</td>
+      <td class="editable" onclick="editQty(${i})">${it.qty}</td>
+      <td><button class="small-btn" onclick="removeItem(${i})">❌</button></td>`;
+    tbody.appendChild(row);
+  });
+}
+function removeItem(i) { items.splice(i,1); refreshTable(); }
+
+// === Edit popup ===
+const popup = document.getElementById('editPopup');
+const editSearch = document.getElementById('editSearch');
+const editResults = document.getElementById('editResults');
+
+function openEdit(index) {
+  editIndex = index;
+  popup.style.display = 'block';
+  editSearch.value = '';
+  editResults.innerHTML = '';
+  editSearch.focus();
+}
+editSearch.addEventListener('input', function() {
+  const term = editSearch.value.toLowerCase();
+  editResults.innerHTML = '';
+  if (!term || !currentList) return;
+  products
+    .filter(p => p.name.toLowerCase().includes(term)
+      || p.global.toLowerCase().includes(term)
+      || p[currentList].toLowerCase().includes(term))
+    .forEach(p => {
+      const div = document.createElement('div');
+      div.textContent = `${p[currentList]} — ${p.name}`;
+      div.onclick = () => replaceProduct(p);
+      editResults.appendChild(div);
+    });
+});
+function replaceProduct(p) {
+  if (editIndex !== null) {
+    items[editIndex].code = p[currentList];
+    items[editIndex].name = p.name;
+  }
+  refreshTable();
+  closeEdit();
+}
+function editQty(i) {
+  const newVal = prompt('Nueva cantidad:', items[i].qty);
+  if (newVal !== null && !isNaN(newVal) && newVal > 0) {
+    items[i].qty = parseInt(newVal);
+    refreshTable();
+  }
+}
+function closeEdit() { popup.style.display = 'none'; }
+
+// === Export ===
+function exportJSON() {
+  if (!currentSurgery) return alert('Seleccione una cirugía primero');
+  const data = {
+    surgeryID: currentSurgery,
+    priceList: currentList,
+    items: items
+  };
+  const json = JSON.stringify(data, null, 2);
+  document.getElementById('jsonOutput').value = json;
+  navigator.clipboard.writeText(json).catch(()=>{});
+}
+</script>
+
+</body>
+</html>
