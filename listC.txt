@@ -19,8 +19,6 @@ Código	Descripción
 52-17206	Tornillo Autorroscante 1.5 x 6 mm Cruz
 52-17207	Tornillo Autorroscante 1.5 x 7 mm Cruz
 52-19205	Tornillo Autorroscante 1.7 x 5 E mm Cruz 
-	SISTEMA 2.0
-Código	Descripción
 01-08203-A	Placa Recta 3 perforaciones pte. pequeno
 01-08203	Placa Recta 4 perforaciones pte. pequeno
 01-08205	Placa Recta 4 perforaciones pte. Mediano
@@ -69,9 +67,6 @@ CBMA1.5-11-105	Tornillo dual head 1.5 x 11 mm
 	Broca Pequeña
 	Broca Mediana
 	Broca Larga
-	
-	
-	INSUMOS
 US02	Punta de piezo
 AL-0.40	Alambre 0.40
 TRAU-104A	Aguja para microdiseccion
@@ -83,48 +78,27 @@ FC-053	Kit frío contínuo Orthocool
 1608-006-095	Fresa Diamantada 4 mm
 1608-002-011	Frasa Estriada 3.2 mm
 OP8312	Servicios- Asistencia
-	
-	RECOSTRUCCION
 54-15031	Placa Recta 4 perf Sistema 2.3
 52-32150	Tornillo bloqueo 2.3x10 mm Sistema 2.3
-	
-	OMNIPORE
-Micro Thin Sheet	
-OP8438	30mm x 50mm x 0.45mm
-	
-Ultra Thin Sheets	
+OP8438	30mm x 50mm x 0.45mm	
 OP7210	38mm x 50mm x 0.85mm
 OP7212	50mm x 76mm x 0.85mm
-	
-Sheets	
 OP6330	38mm x 50mm x 1.5mm
 OP6331	50mm x 76mm x 1.5mm
 OP9562	38mm x 50mm x 3.0mm
-	
-3S™ Sheets	Smooth Superior Surface
 OP8312	38mm x 50mm x 1.0mm
 OP9312	38mm x 50mm x 1.7mm
-	
-Orbital Rims	
 OP9429	Design Y™ Inferior Orbital Rim - Left 48mm x 25mm
 OP9430	Design Y™ Inferior Orbital Rim - Right 48mm x 25mm
 OP9539	Extended Orbital Rim - Left 53mm x 31mm
-OP9540	Extended Orbital Rim - Right 53mm x 31mm
-	
-Design Y™ Malar (U.S. Patent Pending # 13/532,283)	
+OP9540	Extended Orbital Rim - Right 53mm x 31mm	
 OP9513	Design Y™ Malar - Small - Right 52mm x 26mm x 3.0mm
 OP9514	Design Y™ Malar -Small - Left 52mm x 26mm x 3.0mm
-Nasal Sheet	
-OP9536	Nasal Sheet 40mm x 9mm x 1.1mm
-	
-Paranasal Shapes	
+OP9536	Nasal Sheet 40mm x 9mm x 1.1mm	
 OP9519	Petite Paranasal - Left 29mm x 19mm x 6.0mm
 OP9520	Petite Paranasal - Right 29mm x 19mm x 6.0mm
 OP9525	Large Paranasal - Left 35mm x 26mm x 9.0mm
 OP9526	Large Paranasal - Right 35mm x 26mm x 9.0mm
-	
-	
-DUROMAX	
 OP9550	49,25 mm x 35mm x 1,0
 OP9551	49,25 mm x 35mm x 1,5
 OP9560	49,50mm x 60mm  x 1,0
