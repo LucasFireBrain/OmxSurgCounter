@@ -1,0 +1,7 @@
+{
+  "name": "omxsurgcounter",
+  "version": "1.0.0",
+  "description": "Temporary Codex environment config",
+  "license": "MIT",
+  "dependencies": {}
+}
