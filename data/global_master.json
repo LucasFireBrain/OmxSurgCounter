@@ -1,4 +1,5 @@
-[
+{
+  "products" : [
   {
     "global": "P001",
     "name": "Aguja Para Microdisección",
@@ -1175,4 +1176,4 @@
     "C": "",
     "D": ""
   }
-]
+]}
