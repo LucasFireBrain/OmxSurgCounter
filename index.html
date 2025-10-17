@@ -99,37 +99,62 @@ button.small-btn { padding: 4px 8px; font-size: 12px; }
 </div>
 
 <script>
-// === Example surgery data ===
-const surgeries = [
-  { id:"P519-AFU7", list:"A" },
-  { id:"P516-RGU0", list:"B" },
-  { id:"P516-LAG5", list:"B" },
-  { id:"P514-RRE1", list:"B" },
-  { id:"P514-PSO8", list:"A" },
-  { id:"P512-SES9", list:"B" },
-  { id:"P512-RCA1", list:"A" },
-  { id:"P509-SES8", list:"B" },
-  { id:"P509-SES5", list:"A" },
-  { id:"P509-SES4", list:"A" }
-];
+// === Load external JSON files dynamically ===
+// We'll now load two different JSON sources:
+// 1️⃣ global_master.json  → static data (e.g., products)
+// 2️⃣ daily_data.json     → dynamic data (e.g., surgeries for today)
+//
+// Both files live inside a "data" folder next to this HTML file.
+//
+// project/
+// ├─ cuenta_final.html
+// └─ data/
+//    ├─ global_master.json
+//    └─ daily_data.json
 
-// === Example product data ===
-const products = [
-  { global:"P001", A:"LA01", B:"LB01", name:"Aguja Para Microdisección" },
-  { global:"P002", A:"LA02", B:"LB02", name:"Alambre 0.40 GX" },
-  { global:"P003", A:"LA03", B:"LB03", name:"Broca Contraángulo" },
-  { global:"P004", A:"LA04", B:"LB04", name:"Broca Larga" },
-  { global:"P005", A:"LA05", B:"LB05", name:"Broca Mediana" },
-  { global:"P006", A:"LA06", B:"LB06", name:"Broca Pequeña 1.3 x 47 mm" },
-  { global:"P007", A:"LA07", B:"LB07", name:"Distractor Alveolar" },
-  { global:"P008", A:"LA08", B:"LB08", name:"Fabricacion PRF (Centrifuga)" },
-  { global:"P009", A:"LA09", B:"LB09", name:"Fresón Oval de Carburo" },
-  { global:"P010", A:"LA10", B:"LB10", name:"Fresón Oval de Carburo ST" },
-  { global:"P011", A:"LA11", B:"LB11", name:"Kit Frío Continuo" },
-  { global:"P012", A:"LA12", B:"LB12", name:"Large Tear Cross Cut Rasp" },
-  { global:"P013", A:"LA13", B:"LB13", name:"Prototipo Facial" },
-  { global:"P014", A:"LA14", B:"LB14", name:"Punta Cruz Contraángulo" }
-];
+let surgeries = [];
+let products = [];
+
+// --- STEP 1: Load the stable master file (products) ---
+fetch("./data/global_master.json")
+  .then(res => res.json())
+  .then(masterData => {
+    products = masterData.products || [];
+    console.log("✅ Products loaded:", products.length);
+
+    // Once the products are ready, we continue with the daily data
+    return fetch("./data/daily_data.json");
+  })
+
+  // --- STEP 2: Load the daily surgeries or case data ---
+  .then(res => res.json())
+  .then(dailyData => {
+    surgeries = dailyData.surgeries || [];
+    console.log("✅ Surgeries loaded:", surgeries.length);
+
+    // Now that we have both products and surgeries, fill the dropdown
+    populateSurgeries();
+  })
+
+  // --- STEP 3: Error handling ---
+  .catch(err => {
+    console.error("Error loading data files:", err);
+    alert("⚠️ No se pudieron cargar los archivos de datos.");
+  });
+
+// === Populate the surgery dropdown ===
+// This remains identical — we just call it after both files are loaded.
+function populateSurgeries() {
+  const surgerySelect = document.getElementById('surgerySelect');
+  surgerySelect.innerHTML = '<option value="">Seleccione una cirugía...</option>';
+  surgeries.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = s.id;
+    surgerySelect.appendChild(opt);
+  });
+}
+
 
 const surgerySelect = document.getElementById('surgerySelect');
 const search = document.getElementById('search');
