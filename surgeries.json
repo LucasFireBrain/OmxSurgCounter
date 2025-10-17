@@ -1,0 +1,44 @@
+{
+  "surgeries": [
+    {
+      "id": "P519-AFU7",
+      "list": "A",
+      "hospital": "Clínica Alemana de Santiago",
+      "doctor": "Dr. Felipe Soto",
+      "patient": "Andrés Fuentes",
+      "notes": "Implante cigomático derecho – revisión de medidas previas."
+    },
+    {
+      "id": "P516-RGU0",
+      "list": "B",
+      "hospital": "Hospital Militar",
+      "doctor": "Dra. Carla Reyes",
+      "patient": "María González",
+      "notes": "Reconstrucción orbitaria con malla anatómica preformada."
+    },
+    {
+      "id": "P514-PSO8",
+      "list": "A",
+      "hospital": "Hospital del Salvador",
+      "doctor": "Dr. Jorge Peña",
+      "patient": "Sebastián Osorio",
+      "notes": "Osteosíntesis mandibular, 2 placas + tornillos TR 2.0."
+    },
+    {
+      "id": "P512-SES9",
+      "list": "B",
+      "hospital": "Clínica Las Condes",
+      "doctor": "Dra. Marcela Silva",
+      "patient": "Elena Saavedra",
+      "notes": "Segmentación para prototipo maxilar – cirugía planificada."
+    },
+    {
+      "id": "P509-RCA1",
+      "list": "C",
+      "hospital": "Hospital de Concepción",
+      "doctor": "Dr. Rodrigo Carrasco",
+      "patient": "Daniel Araya",
+      "notes": "Implante PEEK frontal – revisión de tornillos 2.0x6."
+    }
+  ]
+}
