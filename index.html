@@ -99,48 +99,79 @@ button.small-btn { padding: 4px 8px; font-size: 12px; }
 </div>
 
 <script>
-// === Load external JSON files dynamically ===
-// We'll now load two different JSON sources:
-// 1️⃣ global_master.json  → static data (e.g., products)
-// 2️⃣ daily_data.json     → dynamic data (e.g., surgeries for today)
-//
-// Both files live inside a "data" folder next to this HTML file.
-//
-// project/
-// ├─ cuenta_final.html
-// └─ data/
-//    ├─ global_master.json
-//    └─ daily_data.json
+// === Load external JSON files dynamically (with debug logs) ===
+// 1️⃣ global_master.json → static data (products)
+// 2️⃣ daily_data.json    → dynamic data (surgeries)
+// Both files live inside the /data folder.
 
 let surgeries = [];
 let products = [];
 
+// helper function to print sections clearly
+function debugLog(label, value) {
+  console.log(`🧩 ${label}:`, value);
+}
+
 // --- STEP 1: Load the stable master file (products) ---
 fetch("./data/global_master.json")
-  .then(res => res.json())
+  .then(res => {
+    debugLog("Fetching global_master.json", res.status);
+    if (!res.ok) throw new Error("Failed to load global_master.json");
+    return res.json();
+  })
   .then(masterData => {
-    products = masterData.products || [];
-    console.log("✅ Products loaded:", products.length);
+    debugLog("Raw masterData", masterData);
 
-    // Once the products are ready, we continue with the daily data
+    // handle both possible structures (array or {products: [...]})
+    if (Array.isArray(masterData)) {
+      products = masterData;
+      debugLog("Detected format", "Array [] at root");
+    } else if (masterData.products) {
+      products = masterData.products;
+      debugLog("Detected format", "Object with .products");
+    } else {
+      debugLog("Detected format", "Unknown structure");
+      products = [];
+    }
+
+    debugLog("✅ Products loaded", products.length);
+
+    // Load daily data next
     return fetch("./data/daily_data.json");
   })
 
-  // --- STEP 2: Load the daily surgeries or case data ---
-  .then(res => res.json())
+  // --- STEP 2: Load the daily surgeries file ---
+  .then(res => {
+    debugLog("Fetching daily_data.json", res.status);
+    if (!res.ok) throw new Error("Failed to load daily_data.json");
+    return res.json();
+  })
   .then(dailyData => {
-    surgeries = dailyData.surgeries || [];
-    console.log("✅ Surgeries loaded:", surgeries.length);
+    debugLog("Raw dailyData", dailyData);
 
-    // Now that we have both products and surgeries, fill the dropdown
+    if (Array.isArray(dailyData)) {
+      surgeries = dailyData;
+      debugLog("Detected format", "Array [] at root");
+    } else if (dailyData.surgeries) {
+      surgeries = dailyData.surgeries;
+      debugLog("Detected format", "Object with .surgeries");
+    } else {
+      debugLog("Detected format", "Unknown structure");
+      surgeries = [];
+    }
+
+    debugLog("✅ Surgeries loaded", surgeries.length);
+
+    // Populate dropdown once both files are loaded
     populateSurgeries();
   })
 
   // --- STEP 3: Error handling ---
   .catch(err => {
-    console.error("Error loading data files:", err);
-    alert("⚠️ No se pudieron cargar los archivos de datos.");
+    console.error("❌ Error loading data files:", err);
+    alert("⚠️ No se pudieron cargar los archivos de datos. Revisa la consola.");
   });
+
 
 // === Populate the surgery dropdown ===
 // This remains identical — we just call it after both files are loaded.
