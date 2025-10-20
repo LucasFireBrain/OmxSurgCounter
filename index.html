@@ -106,6 +106,8 @@ button.small-btn { padding: 4px 8px; font-size: 12px; }
 
 let surgeries = [];
 let products = [];
+let currentHospital, currentDoctor, currentPatient, currentNotes;
+
 
 // helper function to print sections clearly
 function debugLog(label, value) {
@@ -214,6 +216,10 @@ surgerySelect.addEventListener('change', () => {
   if (found) {
     currentList = found.list;
     currentSurgery = found.id;
+    currentHospital = found.hospital;
+    currentDoctor   = found.doctor;
+    currentPatient  = found.patient;
+    currentNotes    = found.notes || "";
     search.disabled = false;
     qtyInput.disabled = false;
     addBtn.disabled = false;
@@ -334,8 +340,12 @@ function closeQty() { qtyPopup.style.display = 'none'; }
 // === Export JSON ===
 function getJSONData() {
   return JSON.stringify({
-    surgeryID: currentSurgery,
-    priceList: currentList,
+    id: currentSurgery,
+    list: currentList,
+    hospital: currentHospital,
+    doctor: currentDoctor,
+    patient: currentPatient,
+    notes: currentNotes,
     items: items
   }, null, 2);
 }
